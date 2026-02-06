@@ -34,7 +34,7 @@ public class OrderController {
 
   @GetMapping("/{id}")
   public Order get(@PathVariable Long id) {
-    return repository.findById(id).orElseThrow();
+    return repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
   }
 
   @PostMapping
@@ -47,7 +47,7 @@ public class OrderController {
 
   @PutMapping("/{id}")
   public Order update(@PathVariable Long id, @RequestBody OrderUpdateRequest request) {
-    Order existing = repository.findById(id).orElseThrow();
+    Order existing = repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
     if (request.userId() != null) {
       existing.setUserId(request.userId());
     }
@@ -63,7 +63,7 @@ public class OrderController {
 
   @PatchMapping("/{id}/status")
   public Order updateStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest request) {
-    Order existing = repository.findById(id).orElseThrow();
+    Order existing = repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
     applyStatus(existing, request.status());
     return repository.save(existing);
   }
@@ -79,6 +79,7 @@ public class OrderController {
   }
 
   private void applyStatus(Order order, OrderStatus status) {
+    validateTransition(order.getStatus(), status);
     order.setStatus(status);
     Instant now = Instant.now();
     switch (status) {
@@ -100,6 +101,31 @@ public class OrderController {
       default -> {
         // no-op for PENDING/PROCESSING
       }
+    }
+  }
+
+  private void validateTransition(OrderStatus current, OrderStatus next) {
+    if (current == null || current == next) {
+      return;
+    }
+    switch (current) {
+      case PENDING -> {
+        if (next != OrderStatus.PROCESSING && next != OrderStatus.CANCELLED) {
+          throw new OrderStatusTransitionException(current, next);
+        }
+      }
+      case PROCESSING -> {
+        if (next != OrderStatus.SHIPPED && next != OrderStatus.CANCELLED) {
+          throw new OrderStatusTransitionException(current, next);
+        }
+      }
+      case SHIPPED -> {
+        if (next != OrderStatus.DELIVERED) {
+          throw new OrderStatusTransitionException(current, next);
+        }
+      }
+      case DELIVERED, CANCELLED -> throw new OrderStatusTransitionException(current, next);
+      default -> throw new OrderStatusTransitionException(current, next);
     }
   }
 

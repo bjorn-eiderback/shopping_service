@@ -18,6 +18,15 @@ spec:
           image: shopping/gateway-service:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: AUTH_ENABLED
+              value: "false"
+            - name: AUTH0_ISSUER_URI
+              value: ""
+            - name: AUTH0_AUDIENCE
+              value: ""
+            - name: AUTH0_ROLES_CLAIM
+              value: "https://example.com/roles"
 ---
 apiVersion: v1
 kind: Service

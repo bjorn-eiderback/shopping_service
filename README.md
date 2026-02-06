@@ -71,6 +71,49 @@ Available profiles:
 - Java records are used for simple immutable DTOs.
 - Requires annotation processing enabled in the IDE.
 
+## Auth0 (Gateway-Only JWT)
+Authentication is enforced at the gateway only. Services remain internal.
+The gateway validates JWTs and authorizes requests based on roles.
+
+Required env vars (when enabled):
+- `AUTH_ENABLED=true`
+- `AUTH0_ISSUER_URI=https://<tenant>.auth0.com/`
+- `AUTH0_AUDIENCE=<api-identifier>`
+- `AUTH0_ROLES_CLAIM=https://your-namespace/roles` (custom claim for roles)
+
+Role mapping:
+- `apiUser` can `GET /api/**`
+- `apiAdmin` can `POST/PUT/PATCH/DELETE /api/**`
+
+Docker/K8s wiring:
+- Set `AUTH_ENABLED=true` and the Auth0 vars on the gateway container.
+- See `deploy/k8s/gateway-service.yaml` for env var placeholders.
+
+## Order Service Error Handling
+The order service uses custom exceptions and a controller advice to return
+consistent error responses. Example error shape:
+```
+{
+  "code": "ORDER_INVALID_STATUS_TRANSITION",
+  "message": "Invalid status transition: SHIPPED -> PENDING",
+  "timestamp": "2026-02-06T12:00:00Z"
+}
+```
+
+Common codes:
+- `ORDER_NOT_FOUND` (404)
+- `ORDER_INVALID_STATUS_TRANSITION` (409)
+- `ORDER_BAD_REQUEST` (400)
+
+Example (local run):
+```
+AUTH_ENABLED=true \\
+AUTH0_ISSUER_URI=https://your-tenant.auth0.com/ \\
+AUTH0_AUDIENCE=shopping-api \\
+AUTH0_ROLES_CLAIM=https://shopping.local/roles \\
+mvn -pl gateway-service spring-boot:run
+```
+
 ## Kubernetes (minikube)
 1. Build images locally (one per service):
 ```
