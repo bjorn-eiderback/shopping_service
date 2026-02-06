@@ -1,0 +1,16 @@
+**/target/
+**/build/
+**/out/
+**/.classpath
+**/.project
+**/.settings/
+
+**/.idea/
+**/*.iml
+**/*.ipr
+**/*.iws
+**/.vscode/
+
+.DS_Store
+**/*.log
+**/.env
