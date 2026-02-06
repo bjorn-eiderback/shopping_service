@@ -48,6 +48,24 @@ Examples (local):
 - Catalog Service Swagger UI: `http://localhost:8082/swagger-ui/index.html`
 - Order Service Swagger UI: `http://localhost:8083/swagger-ui/index.html`
 
+Gateway aggregation config (runtime):
+- Default (local) uses `http://localhost:8081/8082/8083`.
+- Profiles `stage` and `prod` default to service DNS names (e.g., `http://user-service:8081`).
+- Override any URL with env vars:
+  - `OPENAPI_USER_URL`
+  - `OPENAPI_CATALOG_URL`
+  - `OPENAPI_ORDER_URL`
+
+Select profile at runtime (no build-time changes required):
+```
+SPRING_PROFILES_ACTIVE=stage mvn -pl gateway-service spring-boot:run
+```
+
+Available profiles:
+- `default` (no profile): local URLs (localhost).
+- `stage`: service DNS defaults (e.g., `http://user-service:8081`).
+- `prod`: service DNS defaults (e.g., `http://user-service:8081`).
+
 ## Kubernetes (minikube)
 1. Build images locally (one per service):
 ```

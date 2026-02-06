@@ -34,3 +34,42 @@ springdoc:
   info:
     title: Gateway Service API
     version: v1
+  swagger-ui:
+    disable-swagger-default-url: true
+    urls:
+      - name: user-service
+        url: ${OPENAPI_USER_URL:http://localhost:8081/v3/api-docs}
+      - name: catalog-service
+        url: ${OPENAPI_CATALOG_URL:http://localhost:8082/v3/api-docs}
+      - name: order-service
+        url: ${OPENAPI_ORDER_URL:http://localhost:8083/v3/api-docs}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: stage
+springdoc:
+  swagger-ui:
+    urls:
+      - name: user-service
+        url: ${OPENAPI_USER_URL:http://user-service:8081/v3/api-docs}
+      - name: catalog-service
+        url: ${OPENAPI_CATALOG_URL:http://catalog-service:8082/v3/api-docs}
+      - name: order-service
+        url: ${OPENAPI_ORDER_URL:http://order-service:8083/v3/api-docs}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+springdoc:
+  swagger-ui:
+    urls:
+      - name: user-service
+        url: ${OPENAPI_USER_URL:http://user-service:8081/v3/api-docs}
+      - name: catalog-service
+        url: ${OPENAPI_CATALOG_URL:http://catalog-service:8082/v3/api-docs}
+      - name: order-service
+        url: ${OPENAPI_ORDER_URL:http://order-service:8083/v3/api-docs}
