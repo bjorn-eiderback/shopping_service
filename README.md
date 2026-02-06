@@ -5,6 +5,7 @@ Microservice demo for a shopping app:
 - `catalog-service`: items, status, price (MongoDB)
 - `order-service`: buying/delivery orders (PostgreSQL)
 - `gateway-service`: Spring Cloud Gateway entry point
+- `audit-service`: centralized audit log (PostgreSQL)
 
 ## Prerequisites
 - Java 25
@@ -30,6 +31,7 @@ mvn -pl user-service spring-boot:run
 mvn -pl catalog-service spring-boot:run
 mvn -pl order-service spring-boot:run
 mvn -pl gateway-service spring-boot:run
+mvn -pl audit-service spring-boot:run
 ```
 
 Gateway routes:
@@ -47,6 +49,7 @@ Examples (local):
 - User Service Swagger UI: `http://localhost:8081/swagger-ui/index.html`
 - Catalog Service Swagger UI: `http://localhost:8082/swagger-ui/index.html`
 - Order Service Swagger UI: `http://localhost:8083/swagger-ui/index.html`
+- Audit Service Swagger UI: `http://localhost:8084/swagger-ui/index.html`
 
 Gateway aggregation config (runtime):
 - Default (local) uses `http://localhost:8081/8082/8083`.
@@ -89,6 +92,20 @@ Docker/K8s wiring:
 - Set `AUTH_ENABLED=true` and the Auth0 vars on the gateway container.
 - See `deploy/k8s/gateway-service.yaml` for env var placeholders.
 
+## Audit Logging
+All services emit audit events for reads and writes. Events are stored in the
+`audit-service` PostgreSQL database.
+
+Headers (forwarded by the gateway when JWT auth is enabled):
+- `X-Actor-Id` (JWT subject)
+- `X-Actor-Roles` (comma-separated roles)
+- `X-Actor-Email` (if present in JWT)
+
+Audit events include:
+- service, entityType, entityId, action
+- actor info, request path/method
+- before/after JSON snapshots
+
 ## Order Service Error Handling
 The order service uses custom exceptions and a controller advice to return
 consistent error responses. Example error shape:
@@ -126,6 +143,7 @@ minikube image load shopping/user-service:latest
 minikube image load shopping/catalog-service:latest
 minikube image load shopping/order-service:latest
 minikube image load shopping/gateway-service:latest
+minikube image load shopping/audit-service:latest
 ```
 3. Apply manifests:
 ```
@@ -133,10 +151,12 @@ kubectl apply -f deploy/k8s/namespace.yaml
 kubectl apply -f deploy/k8s/users-postgres.yaml
 kubectl apply -f deploy/k8s/orders-postgres.yaml
 kubectl apply -f deploy/k8s/catalog-mongo.yaml
+kubectl apply -f deploy/k8s/audit-postgres.yaml
 kubectl apply -f deploy/k8s/user-service.yaml
 kubectl apply -f deploy/k8s/catalog-service.yaml
 kubectl apply -f deploy/k8s/order-service.yaml
 kubectl apply -f deploy/k8s/gateway-service.yaml
+kubectl apply -f deploy/k8s/audit-service.yaml
 ```
 4. Optional ingress:
 ```

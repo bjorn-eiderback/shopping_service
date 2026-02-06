@@ -15,6 +15,7 @@ Services:
 - `catalog-service`: manages items, status, price (MongoDB)
 - `order-service`: creates/updates orders and delivery status (PostgreSQL)
 - `gateway-service`: Spring Cloud Gateway entry point
+- `audit-service`: centralized audit log store (PostgreSQL)
 
 Gateway routes:
 - `/api/users/**` -> `user-service`

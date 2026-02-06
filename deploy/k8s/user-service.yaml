@@ -25,6 +25,8 @@ spec:
               value: users
             - name: SPRING_DATASOURCE_PASSWORD
               value: users
+            - name: AUDIT_BASE_URL
+              value: http://audit-service:8084
 ---
 apiVersion: v1
 kind: Service

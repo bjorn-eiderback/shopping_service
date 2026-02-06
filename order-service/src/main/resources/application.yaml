@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: order-service
+  audit:
+    base-url: ${AUDIT_BASE_URL:http://localhost:8084}
   datasource:
     url: jdbc:postgresql://localhost:5433/orders
     username: orders

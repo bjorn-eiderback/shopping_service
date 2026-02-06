@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit-service
+  namespace: shopping
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audit-service
+  template:
+    metadata:
+      labels:
+        app: audit-service
+    spec:
+      containers:
+        - name: audit-service
+          image: shopping/audit-service:latest
+          ports:
+            - containerPort: 8084
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://audit-postgres:5432/audit
+            - name: SPRING_DATASOURCE_USERNAME
+              value: audit
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: audit
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: audit-service
+  namespace: shopping
+spec:
+  selector:
+    app: audit-service
+  ports:
+    - port: 8084
+      targetPort: 8084

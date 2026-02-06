@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,33 +22,89 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
   private final OrderRepository repository;
   private final CatalogClient catalogClient;
+  private final AuditClient auditClient;
 
-  public OrderController(OrderRepository repository, CatalogClient catalogClient) {
+  public OrderController(OrderRepository repository, CatalogClient catalogClient, AuditClient auditClient) {
     this.repository = repository;
     this.catalogClient = catalogClient;
+    this.auditClient = auditClient;
   }
 
   @GetMapping
-  public List<Order> list() {
-    return repository.findAll();
+  public List<Order> list(
+      @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
+      @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
+      @RequestHeader(name = "X-Request-Path", required = false) String path,
+      @RequestHeader(name = "X-Request-Method", required = false) String method) {
+    List<Order> orders = repository.findAll();
+    auditClient.emit(auditClient.request(
+        "Order",
+        null,
+        "READ_LIST",
+        actorId,
+        actorRoles,
+        path,
+        method,
+        null,
+        orders));
+    return orders;
   }
 
   @GetMapping("/{id}")
-  public Order get(@PathVariable Long id) {
-    return repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
+  public Order get(
+      @PathVariable Long id,
+      @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
+      @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
+      @RequestHeader(name = "X-Request-Path", required = false) String path,
+      @RequestHeader(name = "X-Request-Method", required = false) String method) {
+    Order order = repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
+    auditClient.emit(auditClient.request(
+        "Order",
+        String.valueOf(id),
+        "READ",
+        actorId,
+        actorRoles,
+        path,
+        method,
+        null,
+        order));
+    return order;
   }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
-  public Order create(@Valid @RequestBody Order order) {
+  public Order create(
+      @Valid @RequestBody Order order,
+      @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
+      @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
+      @RequestHeader(name = "X-Request-Path", required = false) String path,
+      @RequestHeader(name = "X-Request-Method", required = false) String method) {
     order.setTotal(computeTotal(order.getItemIds()));
     applyStatus(order, OrderStatus.PENDING);
-    return repository.save(order);
+    Order saved = repository.save(order);
+    auditClient.emit(auditClient.request(
+        "Order",
+        String.valueOf(saved.getId()),
+        "CREATE",
+        actorId,
+        actorRoles,
+        path,
+        method,
+        null,
+        saved));
+    return saved;
   }
 
   @PutMapping("/{id}")
-  public Order update(@PathVariable Long id, @RequestBody OrderUpdateRequest request) {
+  public Order update(
+      @PathVariable Long id,
+      @RequestBody OrderUpdateRequest request,
+      @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
+      @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
+      @RequestHeader(name = "X-Request-Path", required = false) String path,
+      @RequestHeader(name = "X-Request-Method", required = false) String method) {
     Order existing = repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
+    Order before = snapshot(existing);
     if (request.userId() != null) {
       existing.setUserId(request.userId());
     }
@@ -58,14 +115,43 @@ public class OrderController {
     if (request.status() != null) {
       applyStatus(existing, request.status());
     }
-    return repository.save(existing);
+    Order saved = repository.save(existing);
+    auditClient.emit(auditClient.request(
+        "Order",
+        String.valueOf(id),
+        "UPDATE",
+        actorId,
+        actorRoles,
+        path,
+        method,
+        before,
+        saved));
+    return saved;
   }
 
   @PatchMapping("/{id}/status")
-  public Order updateStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest request) {
+  public Order updateStatus(
+      @PathVariable Long id,
+      @Valid @RequestBody StatusUpdateRequest request,
+      @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
+      @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
+      @RequestHeader(name = "X-Request-Path", required = false) String path,
+      @RequestHeader(name = "X-Request-Method", required = false) String method) {
     Order existing = repository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
+    Order before = snapshot(existing);
     applyStatus(existing, request.status());
-    return repository.save(existing);
+    Order saved = repository.save(existing);
+    auditClient.emit(auditClient.request(
+        "Order",
+        String.valueOf(id),
+        "UPDATE_STATUS",
+        actorId,
+        actorRoles,
+        path,
+        method,
+        before,
+        saved));
+    return saved;
   }
 
   private BigDecimal computeTotal(List<String> itemIds) {
@@ -132,4 +218,19 @@ public class OrderController {
   public record OrderUpdateRequest(String userId, List<String> itemIds, OrderStatus status) {}
 
   public record StatusUpdateRequest(@NotNull OrderStatus status) {}
+
+  private Order snapshot(Order source) {
+    Order copy = new Order();
+    copy.setId(source.getId());
+    copy.setUserId(source.getUserId());
+    copy.setItemIds(source.getItemIds() == null ? null : List.copyOf(source.getItemIds()));
+    copy.setTotal(source.getTotal());
+    copy.setStatus(source.getStatus());
+    copy.setCreatedAt(source.getCreatedAt());
+    copy.setUpdatedAt(source.getUpdatedAt());
+    copy.setShippedAt(source.getShippedAt());
+    copy.setDeliveredAt(source.getDeliveredAt());
+    copy.setCancelledAt(source.getCancelledAt());
+    return copy;
+  }
 }
