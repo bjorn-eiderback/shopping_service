@@ -66,6 +66,11 @@ Available profiles:
 - `stage`: service DNS defaults (e.g., `http://user-service:8081`).
 - `prod`: service DNS defaults (e.g., `http://user-service:8081`).
 
+## Lombok and Records
+- Lombok is used for entity boilerplate (getters/setters/constructors).
+- Java records are used for simple immutable DTOs.
+- Requires annotation processing enabled in the IDE.
+
 ## Kubernetes (minikube)
 1. Build images locally (one per service):
 ```

@@ -36,6 +36,7 @@ Inter-service behavior:
 - Java 25, Spring Boot 4.0.x, Spring Cloud 2025.0.x.
 - Maven multi-module build at repo root (`/Users/bjorne/gitrepos/SHOP/shopping_service`).
 - No breaking changes to existing public REST endpoints unless explicitly requested.
+- Use Lombok for entity boilerplate and Java records for simple immutable DTOs.
 
 ## How Codex should work in this repo
 - Prefer small, incremental changes per request.
