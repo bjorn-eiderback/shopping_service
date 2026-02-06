@@ -84,6 +84,31 @@ Required env vars (when enabled):
 - `AUTH0_AUDIENCE=<api-identifier>`
 - `AUTH0_ROLES_CLAIM=https://your-namespace/roles` (custom claim for roles)
 
+Local development without auth:
+- Keep `AUTH_ENABLED=false` (default).
+- No JWT token is required; requests are permitted by the gateway.
+
+Local development with basic auth (no JWT):
+- Set `AUTH_DEV_BASIC_ENABLED=true` on the gateway.
+- Default users:
+  - `adminAPI` / `admin` (role `apiAdmin`)
+  - `userAPI` / `user` (role `apiUser`)
+
+Example (basic auth):
+```
+AUTH_DEV_BASIC_ENABLED=true mvn -pl gateway-service spring-boot:run
+```
+
+curl example:
+```
+curl -u adminAPI:admin http://localhost:8080/api/orders
+```
+
+Swagger UI with Basic Auth:
+- Open `http://localhost:8080/swagger-ui/index.html`
+- If prompted by the browser, enter the basic auth credentials.
+- If Swagger UI loads, use the browser’s basic auth cache for subsequent calls.
+
 Role mapping:
 - `apiUser` can `GET /api/**`
 - `apiAdmin` can `POST/PUT/PATCH/DELETE /api/**`
@@ -129,6 +154,79 @@ AUTH0_ISSUER_URI=https://your-tenant.auth0.com/ \\
 AUTH0_AUDIENCE=shopping-api \\
 AUTH0_ROLES_CLAIM=https://shopping.local/roles \\
 mvn -pl gateway-service spring-boot:run
+```
+
+## Calling the API With Roles
+All calls go through the gateway. Use a JWT that includes roles in the configured
+roles claim (for example `https://shopping.local/roles`).
+
+Role behavior:
+- `apiUser` can `GET /api/**`
+- `apiAdmin` can `POST/PUT/PATCH/DELETE /api/**` (and can also read)
+
+All examples below assume local basic auth is enabled.
+Replace `<USER>`/`<PASS>` with `adminAPI`/`admin` or `userAPI`/`user`.
+
+### curl
+Read (apiUser or apiAdmin):
+```
+curl -u <USER>:<PASS> \
+  http://localhost:8080/api/orders
+```
+
+Write (apiAdmin only):
+```
+curl -u <USER>:<PASS> -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"userId":"u1","itemIds":["item-1","item-2"]}' \
+  http://localhost:8080/api/orders
+```
+
+### HTTPie
+Read:
+```
+http GET :8080/api/catalog --auth <USER>:<PASS>
+```
+
+Write (admin):
+```
+http POST :8080/api/catalog --auth <USER>:<PASS> \
+  name=Widget price:=19.99 status=ACTIVE stockQuantity:=10
+```
+
+### Postman
+1. Method + URL (e.g., `GET http://localhost:8080/api/users`)
+2. Authorization tab → Type `Basic Auth` → set `<USER>` / `<PASS>`
+3. For POST/PUT/PATCH: add JSON body and `Content-Type: application/json`
+
+### Java (Spring Boot 4 client)
+Example using `RestClient`:
+```java
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestClient;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+String credentials = "adminAPI:admin";
+String encodedBasic = Base64.getEncoder()
+    .encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
+
+RestClient client = RestClient.builder()
+    .baseUrl("http://localhost:8080")
+    .defaultHeader("Authorization", "Basic " + encodedBasic)
+    .build();
+
+String orders = client.get()
+    .uri("/api/orders")
+    .retrieve()
+    .body(String.class);
+
+String created = client.post()
+    .uri("/api/orders")
+    .contentType(MediaType.APPLICATION_JSON)
+    .body("{\"userId\":\"u1\",\"itemIds\":[\"item-1\"]}")
+    .retrieve()
+    .body(String.class);
 ```
 
 ## Kubernetes (minikube)

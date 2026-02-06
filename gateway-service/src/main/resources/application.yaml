@@ -54,6 +54,12 @@ auth:
   audience: ${AUTH0_AUDIENCE:}
   roles-claim: ${AUTH0_ROLES_CLAIM:https://example.com/roles}
   role-prefix: ROLE_
+  dev-basic:
+    enabled: ${AUTH_DEV_BASIC_ENABLED:true}
+    admin-username: ${AUTH_DEV_ADMIN_USERNAME:adminAPI}
+    admin-password: ${AUTH_DEV_ADMIN_PASSWORD:admin}
+    user-username: ${AUTH_DEV_USER_USERNAME:userAPI}
+    user-password: ${AUTH_DEV_USER_PASSWORD:user}
 
 ---
 spring:

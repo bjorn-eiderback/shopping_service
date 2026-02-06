@@ -2,6 +2,7 @@ package com.example.shopping.gateway;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,8 +20,13 @@ import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
-import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.util.StringUtils;
 
 @Configuration
@@ -30,6 +36,11 @@ public class SecurityConfig {
   private static final String ROLE_USER = "ROLE_apiUser";
 
   private final boolean authEnabled;
+  private final boolean devBasicEnabled;
+  private final String devAdminUsername;
+  private final String devAdminPassword;
+  private final String devUserUsername;
+  private final String devUserPassword;
   private final String issuerUri;
   private final String audience;
   private final String rolesClaim;
@@ -37,11 +48,21 @@ public class SecurityConfig {
 
   public SecurityConfig(
       @Value("${auth.enabled:false}") boolean authEnabled,
+      @Value("${auth.dev-basic.enabled:false}") boolean devBasicEnabled,
+      @Value("${auth.dev-basic.admin-username:adminAPI}") String devAdminUsername,
+      @Value("${auth.dev-basic.admin-password:admin}") String devAdminPassword,
+      @Value("${auth.dev-basic.user-username:userAPI}") String devUserUsername,
+      @Value("${auth.dev-basic.user-password:user}") String devUserPassword,
       @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}") String issuerUri,
       @Value("${auth.audience:}") String audience,
       @Value("${auth.roles-claim:https://example.com/roles}") String rolesClaim,
       @Value("${auth.role-prefix:ROLE_}") String rolePrefix) {
     this.authEnabled = authEnabled;
+    this.devBasicEnabled = devBasicEnabled;
+    this.devAdminUsername = devAdminUsername;
+    this.devAdminPassword = devAdminPassword;
+    this.devUserUsername = devUserUsername;
+    this.devUserPassword = devUserPassword;
     this.issuerUri = issuerUri;
     this.audience = audience;
     this.rolesClaim = rolesClaim;
@@ -51,6 +72,31 @@ public class SecurityConfig {
   @Bean
   public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
     if (!authEnabled) {
+      if (devBasicEnabled) {
+        return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
+            .authorizeExchange(exchanges -> exchanges
+                .matchers(ServerWebExchangeMatchers.pathMatchers("/actuator/health", "/actuator/info"))
+                .permitAll()
+                .matchers(ServerWebExchangeMatchers.pathMatchers(
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/v3/api-docs.yaml"))
+                .permitAll()
+                .matchers(ServerWebExchangeMatchers.pathMatchers(HttpMethod.GET, "/api/**"))
+                .hasAnyAuthority(ROLE_USER, ROLE_ADMIN)
+                .matchers(ServerWebExchangeMatchers.pathMatchers(HttpMethod.POST, "/api/**"))
+                .hasAuthority(ROLE_ADMIN)
+                .matchers(ServerWebExchangeMatchers.pathMatchers(HttpMethod.PUT, "/api/**"))
+                .hasAuthority(ROLE_ADMIN)
+                .matchers(ServerWebExchangeMatchers.pathMatchers(HttpMethod.PATCH, "/api/**"))
+                .hasAuthority(ROLE_ADMIN)
+                .matchers(ServerWebExchangeMatchers.pathMatchers(HttpMethod.DELETE, "/api/**"))
+                .hasAuthority(ROLE_ADMIN)
+                .anyExchange().authenticated())
+            .httpBasic(spec -> {})
+            .build();
+      }
+
       return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
           .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
           .build();
@@ -94,6 +140,26 @@ public class SecurityConfig {
       decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(validator, audienceValidator()));
     }
     return decoder;
+  }
+
+  @Bean
+  @ConditionalOnProperty(name = "auth.dev-basic.enabled", havingValue = "true")
+  public MapReactiveUserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+    UserDetails admin = User.withUsername(devAdminUsername)
+        .password(passwordEncoder.encode(devAdminPassword))
+        .roles("apiAdmin")
+        .build();
+    UserDetails user = User.withUsername(devUserUsername)
+        .password(passwordEncoder.encode(devUserPassword))
+        .roles("apiUser")
+        .build();
+    return new MapReactiveUserDetailsService(admin, user);
+  }
+
+  @Bean
+  @ConditionalOnProperty(name = "auth.dev-basic.enabled", havingValue = "true")
+  public PasswordEncoder passwordEncoder() {
+    return PasswordEncoderFactories.createDelegatingPasswordEncoder();
   }
 
   private OAuth2TokenValidator<Jwt> audienceValidator() {
