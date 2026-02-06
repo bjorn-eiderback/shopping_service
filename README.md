@@ -37,6 +37,17 @@ Gateway routes:
 - `GET/POST /api/catalog/**` -> `catalog-service`
 - `GET/POST /api/orders/**` -> `order-service`
 
+## OpenAPI / Swagger UI
+Each service exposes OpenAPI docs and Swagger UI:
+- OpenAPI JSON: `http://<service-host>/v3/api-docs`
+- Swagger UI: `http://<service-host>/swagger-ui/index.html`
+
+Examples (local):
+- Gateway Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- User Service Swagger UI: `http://localhost:8081/swagger-ui/index.html`
+- Catalog Service Swagger UI: `http://localhost:8082/swagger-ui/index.html`
+- Order Service Swagger UI: `http://localhost:8083/swagger-ui/index.html`
+
 ## Kubernetes (minikube)
 1. Build images locally (one per service):
 ```

@@ -18,3 +18,8 @@ management:
     web:
       exposure:
         include: health,info,metrics
+
+springdoc:
+  info:
+    title: User Service API
+    version: v1
