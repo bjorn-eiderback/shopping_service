@@ -2,6 +2,7 @@ package com.example.shopping.catalog;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import java.time.Instant;
 import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,4 +26,11 @@ public class Item {
 
   @NotBlank
   private String status;
+
+  @Min(0)
+  private int stockQuantity = 0;
+
+  private Instant lastUpdated;
+
+  private boolean active = true;
 }

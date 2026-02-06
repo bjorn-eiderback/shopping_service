@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: gateway-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AUTH0_ISSUER_URI:}
   cloud:
     gateway:
       routes:
@@ -43,6 +48,12 @@ springdoc:
         url: ${OPENAPI_CATALOG_URL:http://localhost:8082/v3/api-docs}
       - name: order-service
         url: ${OPENAPI_ORDER_URL:http://localhost:8083/v3/api-docs}
+
+auth:
+  enabled: ${AUTH_ENABLED:false}
+  audience: ${AUTH0_AUDIENCE:}
+  roles-claim: ${AUTH0_ROLES_CLAIM:https://example.com/roles}
+  role-prefix: ROLE_
 
 ---
 spring:
