@@ -30,6 +30,7 @@ Inter-service behavior:
 - All external traffic goes through `gateway-service`.
 - Services communicate via REST unless explicitly changed.
 - Docker and Kubernetes deployment assets must remain functional.
+- Expose Actuator endpoints and OpenAPI/Swagger UI for all services.
 
 ## Technical constraints
 - Java 25, Spring Boot 4.0.x, Spring Cloud 2025.0.x.

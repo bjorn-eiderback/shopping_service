@@ -6,6 +6,7 @@
     <groupId>com.example.shopping</groupId>
     <artifactId>shopping-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>gateway-service</artifactId>
@@ -14,15 +15,20 @@
   <dependencies>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-gateway</artifactId>
+      <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-kubernetes-client-discovery</artifactId>
+      <artifactId>spring-cloud-kubernetes-client-discovery</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+      <version>${springdoc.version}</version>
     </dependency>
   </dependencies>
 

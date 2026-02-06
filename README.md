@@ -72,5 +72,5 @@ minikube ip
 ```
 
 ## Notes
-- This project assumes Spring Boot `4.0.0` and Spring Cloud `2025.0.0`. If you want pinned versions, update `pom.xml` in the repo root.
+- This project assumes Spring Boot `4.0.2` and Spring Cloud `2025.1.1`. If you want pinned versions, update `pom.xml` in the repo root.
 - Order total is computed by calling `catalog-service` for each item id.
