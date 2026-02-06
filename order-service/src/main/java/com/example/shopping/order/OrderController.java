@@ -38,7 +38,7 @@ public class OrderController {
   public Order create(@Valid @RequestBody Order order) {
     BigDecimal total = order.getItemIds().stream()
         .map(catalogClient::getItem)
-        .map(CatalogItem::getPrice)
+        .map(CatalogItem::price)
         .reduce(BigDecimal.ZERO, BigDecimal::add);
     order.setTotal(total);
     order.setStatus("PLACED");

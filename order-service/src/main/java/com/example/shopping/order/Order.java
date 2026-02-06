@@ -13,9 +13,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 import java.util.List;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "orders")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Order {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,44 +40,4 @@ public class Order {
 
   @NotBlank
   private String status;
-
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public String getUserId() {
-    return userId;
-  }
-
-  public void setUserId(String userId) {
-    this.userId = userId;
-  }
-
-  public List<String> getItemIds() {
-    return itemIds;
-  }
-
-  public void setItemIds(List<String> itemIds) {
-    this.itemIds = itemIds;
-  }
-
-  public BigDecimal getTotal() {
-    return total;
-  }
-
-  public void setTotal(BigDecimal total) {
-    this.total = total;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public void setStatus(String status) {
-    this.status = status;
-  }
 }
