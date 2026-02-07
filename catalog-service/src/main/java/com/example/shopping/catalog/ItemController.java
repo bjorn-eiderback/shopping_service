@@ -49,7 +49,7 @@ public class ItemController {
 
   @GetMapping("/{id}")
   public Item get(
-      @PathVariable String id,
+      @PathVariable("id") String id,
       @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
       @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
       @RequestHeader(name = "X-Request-Path", required = false) String path,
@@ -93,7 +93,7 @@ public class ItemController {
 
   @PutMapping("/{id}")
   public Item update(
-      @PathVariable String id,
+      @PathVariable("id") String id,
       @Valid @RequestBody Item item,
       @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
       @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
@@ -118,7 +118,7 @@ public class ItemController {
 
   @PatchMapping("/{id}/stock")
   public Item updateStock(
-      @PathVariable String id,
+      @PathVariable("id") String id,
       @Valid @RequestBody StockUpdateRequest request,
       @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
       @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,

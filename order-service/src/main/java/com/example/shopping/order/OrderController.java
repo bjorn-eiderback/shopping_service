@@ -52,7 +52,7 @@ public class OrderController {
 
   @GetMapping("/{id}")
   public Order get(
-      @PathVariable Long id,
+      @PathVariable("id") Long id,
       @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
       @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
       @RequestHeader(name = "X-Request-Path", required = false) String path,
@@ -97,7 +97,7 @@ public class OrderController {
 
   @PutMapping("/{id}")
   public Order update(
-      @PathVariable Long id,
+      @PathVariable("id") Long id,
       @RequestBody OrderUpdateRequest request,
       @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
       @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
@@ -131,7 +131,7 @@ public class OrderController {
 
   @PatchMapping("/{id}/status")
   public Order updateStatus(
-      @PathVariable Long id,
+      @PathVariable("id") Long id,
       @Valid @RequestBody StatusUpdateRequest request,
       @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
       @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,

@@ -45,7 +45,7 @@ public class CustomerController {
 
   @GetMapping("/{id}")
   public Customer get(
-      @PathVariable Long id,
+      @PathVariable("id") Long id,
       @RequestHeader(name = "X-Actor-Id", required = false) String actorId,
       @RequestHeader(name = "X-Actor-Roles", required = false) String actorRoles,
       @RequestHeader(name = "X-Request-Path", required = false) String path,
