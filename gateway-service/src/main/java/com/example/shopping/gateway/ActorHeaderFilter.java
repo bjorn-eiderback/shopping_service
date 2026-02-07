@@ -23,8 +23,9 @@ public class ActorHeaderFilter implements GlobalFilter, Ordered {
   public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
     return exchange.getPrincipal()
         .cast(Authentication.class)
-        .flatMap(auth -> chain.filter(mutateExchange(exchange, auth)))
-        .switchIfEmpty(Mono.defer(() -> chain.filter(mutateExchange(exchange, null))));
+        .map(auth -> mutateExchange(exchange, auth))
+        .defaultIfEmpty(mutateExchange(exchange, null))
+        .flatMap(chain::filter);
   }
 
   private ServerWebExchange mutateExchange(ServerWebExchange exchange, Authentication auth) {
