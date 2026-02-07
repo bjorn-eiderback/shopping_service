@@ -6,9 +6,8 @@ spring:
     name: catalog-service
   audit:
     base-url: ${AUDIT_BASE_URL:http://localhost:8084}
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/catalog
+  mongodb:
+    uri: mongodb://localhost:27017/catalog
 
 management:
   endpoints:

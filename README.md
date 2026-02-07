@@ -20,6 +20,76 @@ cd /Users/bjorne/gitrepos/SHOP/shopping_service
 mvn -DskipTests package
 ```
 
+## Testing
+Purpose:
+- verify business logic quickly (unit tests)
+- verify HTTP/security behavior at service boundaries (integration tests)
+- verify persistence against real databases (Testcontainers integration tests)
+
+Test categories used in this repo:
+- unit tests:
+  - examples: `OrderControllerTest`, `CustomerControllerTest`, `ItemControllerTest`
+- integration tests (Spring context/web layer):
+  - examples: `GatewaySecurityIntegrationTest`, `AuthorizationServiceIntegrationTest`, `OrderControllerIntegrationTest`
+- Testcontainers repository integration tests:
+  - `OrderRepositoryTestcontainersIntegrationTest` (PostgreSQL)
+  - `CustomerRepositoryTestcontainersIntegrationTest` (PostgreSQL)
+  - `ItemRepositoryTestcontainersIntegrationTest` (MongoDB)
+
+Run from terminal:
+```bash
+# all non-Testcontainers tests in all modules (default fast path)
+mvn test
+
+# one module
+mvn -pl order-service test
+
+# run Testcontainers tests (includes TestcontainersIntegrationTest classes)
+mvn -Ptestcontainers test
+
+# run Testcontainers tests for one module
+mvn -Ptestcontainers -pl order-service test
+mvn -Ptestcontainers -pl user-service test
+mvn -Ptestcontainers -pl catalog-service test
+
+# one Testcontainers test class
+mvn -pl order-service -Dtest=OrderRepositoryTestcontainersIntegrationTest test
+mvn -pl user-service -Dtest=CustomerRepositoryTestcontainersIntegrationTest test
+mvn -pl catalog-service -Dtest=ItemRepositoryTestcontainersIntegrationTest test
+```
+
+Maven profile behavior:
+- default (`mvn test`): excludes `*TestcontainersIntegrationTest`
+- `-Ptestcontainers`: includes `*TestcontainersIntegrationTest`
+
+Run from IntelliJ IDEA:
+1. Open the Maven project and reimport if needed.
+2. Run a single test class by right-clicking the class in `src/test/java`.
+3. Run module tests from the Maven tool window (`test` lifecycle for that module).
+4. For Testcontainers tests, ensure Docker Desktop is running before starting the test.
+
+Recommended IntelliJ run configurations:
+1. Fast default test run (no Testcontainers):
+- Type: `JUnit`
+- Scope: `All in package` (or module)
+- Tag expression: exclude tag `testcontainers`
+2. Testcontainers-only run:
+- Type: `JUnit`
+- Scope: `All in package` (or module)
+- Tag expression: include tag `testcontainers`
+3. Maven alternative (profile-based):
+- Type: `Maven`
+- Command line: `-Ptestcontainers test`
+- Optional module: `-pl order-service` / `-pl user-service` / `-pl catalog-service`
+
+Notes:
+- Testcontainers tests are slower than unit tests because containers are started.
+- If tests pass in isolation but fail when running many tests together in IntelliJ:
+  - reimport Maven projects
+  - rebuild the project
+  - rerun the failing module/test
+- Mockito warnings about dynamic agent loading on newer JDKs are expected in this setup.
+
 ## Local databases (Docker)
 ```
 cd /Users/bjorne/gitrepos/SHOP/shopping_service
