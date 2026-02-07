@@ -16,6 +16,7 @@ Services:
 - `order-service`: creates/updates orders and delivery status (PostgreSQL)
 - `gateway-service`: Spring Cloud Gateway entry point
 - `audit-service`: centralized audit log store (PostgreSQL)
+- `authorization-service`: local OAuth2 authorization server for comparison with Auth0
 
 Gateway routes:
 - `/api/users/**` -> `user-service`

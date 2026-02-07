@@ -19,14 +19,24 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: AUTH_PROVIDER
+              value: "none"
             - name: AUTH_ENABLED
               value: "false"
+            - name: AUTH_DEV_BASIC_ENABLED
+              value: "true"
             - name: AUTH0_ISSUER_URI
               value: ""
             - name: AUTH0_AUDIENCE
               value: ""
+            - name: AUTH_ROLES_CLAIM
+              value: "https://example.com/roles"
             - name: AUTH0_ROLES_CLAIM
               value: "https://example.com/roles"
+            - name: LOCAL_OAUTH2_ISSUER_URI
+              value: "http://authorization-service:9000"
+            - name: LOCAL_OAUTH2_AUDIENCE
+              value: "shopping-api"
 ---
 apiVersion: v1
 kind: Service

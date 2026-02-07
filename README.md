@@ -6,6 +6,7 @@ Microservice demo for a shopping app:
 - `order-service`: buying/delivery orders (PostgreSQL)
 - `gateway-service`: Spring Cloud Gateway entry point
 - `audit-service`: centralized audit log (PostgreSQL)
+- `authorization-service`: local OAuth2 authorization server (alternative to Auth0)
 
 ## Prerequisites
 - Java 25
@@ -32,6 +33,7 @@ mvn -pl catalog-service spring-boot:run
 mvn -pl order-service spring-boot:run
 mvn -pl gateway-service spring-boot:run
 mvn -pl audit-service spring-boot:run
+mvn -pl authorization-service spring-boot:run
 ```
 
 Gateway routes:
@@ -50,6 +52,7 @@ Examples (local):
 - Catalog Service Swagger UI: `http://localhost:8082/swagger-ui/index.html`
 - Order Service Swagger UI: `http://localhost:8083/swagger-ui/index.html`
 - Audit Service Swagger UI: `http://localhost:8084/swagger-ui/index.html`
+- Authorization Service endpoints: `http://localhost:9000/.well-known/openid-configuration`
 
 Gateway aggregation config (runtime):
 - Default (local) uses `http://localhost:8081/8082/8083`.
@@ -78,11 +81,21 @@ Available profiles:
 Authentication is enforced at the gateway only. Services remain internal.
 The gateway validates JWTs and authorizes requests based on roles.
 
-Required env vars (when enabled):
+Provider switch:
+- `AUTH_PROVIDER=none` (no JWT, optional basic auth)
+- `AUTH_PROVIDER=auth0` (Auth0 JWT validation)
+- `AUTH_PROVIDER=local` (local `authorization-service` JWT validation)
+
+Auth0 env vars:
 - `AUTH_ENABLED=true`
 - `AUTH0_ISSUER_URI=https://<tenant>.auth0.com/`
 - `AUTH0_AUDIENCE=<api-identifier>`
 - `AUTH0_ROLES_CLAIM=https://your-namespace/roles` (custom claim for roles)
+
+Local OAuth2 env vars:
+- `LOCAL_OAUTH2_ISSUER_URI=http://localhost:9000`
+- `LOCAL_OAUTH2_AUDIENCE=shopping-api`
+- `LOCAL_OAUTH2_ROLES_CLAIM=https://example.com/roles` (configured in auth service)
 
 Local development without auth:
 - Keep `AUTH_ENABLED=false` (default).
@@ -116,6 +129,49 @@ Role mapping:
 Docker/K8s wiring:
 - Set `AUTH_ENABLED=true` and the Auth0 vars on the gateway container.
 - See `deploy/k8s/gateway-service.yaml` for env var placeholders.
+
+Local OAuth2 token examples (from `authorization-service`):
+```
+# admin token (apiAdmin + apiUser roles)
+curl -u admin-client:admin-secret \
+  -d grant_type=client_credentials \
+  -d scope=apiAdmin \
+  -d audience=shopping-api \
+  http://localhost:9000/oauth2/token
+
+# user token (apiUser role)
+curl -u user-client:user-secret \
+  -d grant_type=client_credentials \
+  -d scope=apiUser \
+  -d audience=shopping-api \
+  http://localhost:9000/oauth2/token
+```
+
+Use local OAuth2 mode in gateway:
+```
+AUTH_PROVIDER=local \
+AUTH_DEV_BASIC_ENABLED=false \
+LOCAL_OAUTH2_ISSUER_URI=http://localhost:9000 \
+LOCAL_OAUTH2_AUDIENCE=shopping-api \
+mvn -pl gateway-service spring-boot:run
+```
+
+Use Auth0 mode in gateway:
+```
+AUTH_PROVIDER=auth0 \
+AUTH_DEV_BASIC_ENABLED=false \
+AUTH0_ISSUER_URI=https://your-tenant.auth0.com/ \
+AUTH0_AUDIENCE=shopping-api \
+mvn -pl gateway-service spring-boot:run
+```
+
+Use no-JWT mode in gateway:
+```
+AUTH_PROVIDER=none mvn -pl gateway-service spring-boot:run
+```
+
+Feature flags note:
+- A flag service like Flagsmith can select the provider (`auth0` vs `local`), but apply the value at startup (env/config) rather than hot-switching auth mode at runtime.
 
 ## Audit Logging
 All services emit audit events for reads and writes. Events are stored in the
@@ -242,6 +298,7 @@ minikube image load shopping/catalog-service:latest
 minikube image load shopping/order-service:latest
 minikube image load shopping/gateway-service:latest
 minikube image load shopping/audit-service:latest
+minikube image load shopping/authorization-service:latest
 ```
 3. Apply manifests:
 ```
@@ -255,6 +312,7 @@ kubectl apply -f deploy/k8s/catalog-service.yaml
 kubectl apply -f deploy/k8s/order-service.yaml
 kubectl apply -f deploy/k8s/gateway-service.yaml
 kubectl apply -f deploy/k8s/audit-service.yaml
+kubectl apply -f deploy/k8s/authorization-service.yaml
 ```
 4. Optional ingress:
 ```

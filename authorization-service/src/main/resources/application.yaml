@@ -1,0 +1,22 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: authorization-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+springdoc:
+  info:
+    title: Authorization Service API
+    version: v1
+
+auth:
+  local:
+    issuer-uri: ${LOCAL_OAUTH2_ISSUER_URI:http://localhost:9000}
+    roles-claim: ${LOCAL_OAUTH2_ROLES_CLAIM:https://example.com/roles}

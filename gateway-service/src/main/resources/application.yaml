@@ -4,11 +4,6 @@ server:
 spring:
   application:
     name: gateway-service
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${AUTH0_ISSUER_URI:}
   cloud:
     gateway:
       routes:
@@ -50,10 +45,16 @@ springdoc:
         url: ${OPENAPI_ORDER_URL:http://localhost:8083/v3/api-docs}
 
 auth:
+  provider: ${AUTH_PROVIDER:none}
   enabled: ${AUTH_ENABLED:false}
-  audience: ${AUTH0_AUDIENCE:}
-  roles-claim: ${AUTH0_ROLES_CLAIM:https://example.com/roles}
+  roles-claim: ${AUTH_ROLES_CLAIM:${AUTH0_ROLES_CLAIM:https://example.com/roles}}
   role-prefix: ROLE_
+  auth0:
+    issuer-uri: ${AUTH0_ISSUER_URI:}
+    audience: ${AUTH0_AUDIENCE:}
+  local:
+    issuer-uri: ${LOCAL_OAUTH2_ISSUER_URI:http://localhost:9000}
+    audience: ${LOCAL_OAUTH2_AUDIENCE:shopping-api}
   dev-basic:
     enabled: ${AUTH_DEV_BASIC_ENABLED:true}
     admin-username: ${AUTH_DEV_ADMIN_USERNAME:adminAPI}

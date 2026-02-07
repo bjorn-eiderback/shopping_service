@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authorization-service
+  namespace: shopping
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authorization-service
+  template:
+    metadata:
+      labels:
+        app: authorization-service
+    spec:
+      containers:
+        - name: authorization-service
+          image: shopping/authorization-service:latest
+          ports:
+            - containerPort: 9000
+          env:
+            - name: LOCAL_OAUTH2_ISSUER_URI
+              value: http://authorization-service:9000
+            - name: LOCAL_OAUTH2_ROLES_CLAIM
+              value: https://example.com/roles
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authorization-service
+  namespace: shopping
+spec:
+  selector:
+    app: authorization-service
+  ports:
+    - port: 9000
+      targetPort: 9000

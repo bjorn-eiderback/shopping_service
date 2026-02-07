@@ -13,6 +13,7 @@
     <module>catalog-service</module>
     <module>order-service</module>
     <module>audit-service</module>
+    <module>authorization-service</module>
   </modules>
 
   <properties>
